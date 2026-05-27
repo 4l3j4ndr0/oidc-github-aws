@@ -36,5 +36,9 @@ jobs:
         env:
           REGISTRY: ${{ steps.ecr-login.outputs.registry }}
         run: |
-          docker build -t $REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
-          docker push $REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+          BRANCH=${GITHUB_REF_NAME}
+          SHA=$(echo $GITHUB_SHA | cut -c1-7)
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          TAG="${BRANCH}-${SHA}-${TIMESTAMP}"
+          docker build -t $REGISTRY/$ECR_REPOSITORY:$TAG .
+          docker push $REGISTRY/$ECR_REPOSITORY:$TAG
