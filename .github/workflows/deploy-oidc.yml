@@ -5,6 +5,7 @@ name: "✅ Build & Push ECR (OIDC)"
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
