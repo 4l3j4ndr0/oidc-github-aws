@@ -1,0 +1,37 @@
+# ❌ MALAS PRÁCTICAS: Access Keys de larga duración almacenadas como secrets
+# Riesgos: rotación manual, exposición en logs, acceso permanente si se filtran.
+name: "❌ Build & Push ECR (Access Keys)"
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: oidc-demo-api
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (Access Keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          # ⚠️ Credenciales de larga duración - si se filtran, acceso permanente hasta rotación
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & Push Docker Image
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          docker build -t $REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
+          docker push $REGISTRY/$ECR_REPOSITORY:${{ github.sha }}

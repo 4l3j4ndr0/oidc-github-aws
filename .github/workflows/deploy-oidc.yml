@@ -1,0 +1,40 @@
+# ✅ BUENAS PRÁCTICAS: Usa OIDC para obtener credenciales temporales
+# No se almacenan secrets de larga duración. GitHub asume un rol IAM via federation.
+name: "✅ Build & Push ECR (OIDC)"
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: oidc-demo-api
+
+permissions:
+  id-token: write   # Requerido para solicitar el token OIDC
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          # No access keys! El token OIDC se intercambia por credenciales temporales (1h max)
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & Push Docker Image
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          docker build -t $REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
+          docker push $REGISTRY/$ECR_REPOSITORY:${{ github.sha }}

@@ -1,0 +1,12 @@
+{
+  "name": "oidc-demo-api",
+  "version": "1.0.0",
+  "description": "Demo API para mostrar OIDC vs Access Keys en GitHub Actions",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "4.18.2"
+  }
+}
